@@ -1,0 +1,1 @@
+Scripts separados na exata ordem dos 14 blocos <script> originais. Nao use defer, async ou type=module e nao reordene os arquivos: algumas referencias globais dependem dessa sequencia.

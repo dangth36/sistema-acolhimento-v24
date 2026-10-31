@@ -1,0 +1,28 @@
+SITE ALBERGUE FREI — V24, organização por pastas
+
+ESTRUTURA
+  index.html               (entrada principal do site — para hospedagem estática)
+  Index/index.html         (mesma interface — abra este arquivo no seu computador)
+  css/estilos.css          (95 blocos CSS agrupados mantendo a ordem)
+  js/script-01.js a script-14.js  (14 blocos JS preservados, na ordem original)
+  img/                     (reservada para arquivos de imagens estáticas)
+
+COMO TESTAR NO COMPUTADOR
+1. Extraia o ZIP, sem tirar arquivos de suas pastas.
+2. Abra Index/index.html ou index.html no Chrome/Edge.
+3. Verifique login e funcionalidades com DADOS FICTÍCIOS.
+4. Nunca apague dados ou substitua a versão de trabalho antes de conferir um backup.
+
+IMPORTANTE SOBRE GOOGLE APPS SCRIPT
+O editor do Apps Script não oferece diretórios js/, css/, img/ servidos estaticamente como um servidor web tradicional.
+O pacote desta pasta não pode ser colado integralmente no Apps Script e publicado com as URLs relativas; ele é para estrutura de SITE ESTÁTICO.
+Para publicar no Apps Script, será necessário adaptar a carga dos arquivos pelo HtmlService, por exemplo incluindo o CSS e JavaScript como arquivos HTML do projeto ou usando hospedagem externa.
+NÃO basta publicar o Index/index.html no Apps Script: as URLs ../js e ../css não são servidas por ele.
+A mera divisão dos arquivos também NÃO implementa sincronização entre computadores.
+
+ATENÇÃO A DADOS PESSOAIS
+Não publique registros reais de acolhidos em hospedagem pública sem autenticação efetiva no servidor, armazenamento seguro, backups e avaliação de privacidade.
+Uma restrição apenas na interface HTML não é uma barreira de segurança.
+
+ORIGEM
+Gerado diretamente a partir do Index.html que você enviou como texto em 31/10/2026; não inclui alterações posteriores não presentes naquele arquivo.

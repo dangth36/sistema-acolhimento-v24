@@ -1,0 +1,604 @@
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Controle de Quartos e Plantão — Offline</title>
+<link rel="stylesheet" href="../css/estilos.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+<aside class="abd-sidebar" aria-label="Navegação do sistema"><div class="abd-brand"><button type="button" id="abdAlternarMenu" class="abd-menu-toggle" aria-label="Recolher menu lateral" aria-expanded="true" aria-controls="abdNavMenu" title="Abrir ou fechar menu">☰</button><div class="abd-brand-head"><span class="abd-brand-symbol">🏠</span><div class="abd-brand-text"><strong>Controle de Acolhimento</strong><small>Gestão de quartos, acessos, plantões e medicações</small></div></div></div><nav class="abd-nav" id="abdNavMenu" aria-label="Menu principal"><button type="button" class="abd-selected" data-abd-nav="painel"><span class="abd-nav-icon">📊</span><span class="abd-nav-label">Painel geral</span></button><button type="button" data-abd-nav="quartos"><span class="abd-nav-icon">🛏️</span><span class="abd-nav-label">Quartos e áreas</span></button><button type="button" data-abd-nav="mapa"><span class="abd-nav-icon">🏢</span><span class="abd-nav-label">Mapa de ocupação</span></button><button type="button" data-abd-nav="funcionarios"><span class="abd-nav-icon">👥</span><span class="abd-nav-label">Funcionários</span></button><button type="button" data-abd-nav="acesso"><span class="abd-nav-icon">🔁</span><span class="abd-nav-label">Entrada e saída</span></button><button type="button" data-abd-nav="historico"><span class="abd-nav-icon">📖</span><span class="abd-nav-label">Histórico</span></button><button type="button" data-abd-nav="auditoria"><span class="abd-nav-icon">📋</span><span class="abd-nav-label">Auditoria</span></button><button type="button" data-abd-nav="medicamentos"><span class="abd-nav-icon">💊</span><span class="abd-nav-label">Medicamentos</span></button><button type="button" data-abd-nav="arquivos"><span class="abd-nav-icon">🗂️</span><span class="abd-nav-label">Arquivos e backup</span></button></nav><div class="abd-sidebar-footer">Operação local · sem internet</div></aside>
+
+<div id="authToolbar" class="operador-toolbar topo-operacao" role="toolbar" aria-label="Controles do plantão e operador">
+  <div class="topo-data-plantao"><label for="dataInicioPlantao">INÍCIO DO PLANTÃO</label><input type="date" id="dataInicioPlantao" aria-label="Data de início do plantão"></div>
+  <button id="btnDesfazer" type="button">↶ DESFAZER</button>
+  <button id="btnRefazer" type="button" class="btn-secondary" disabled="">↷ REFAZER</button>
+  <button id="authAuditBtn" type="button">AUDITORIA</button>
+  <button id="btnAbrirHistorico" type="button" class="btn-atalho-historico">HISTÓRICO</button>
+  <span id="operadorResumo">👤 OPERADOR: <strong id="operadorNomeExibido">Não autenticado</strong></span>
+  <button id="adminPrincipalBtn" type="button" aria-label="Administrador Principal" title="Administrador Principal">🔐</button>
+  <button id="abdSairTopo" type="button" title="Sair e voltar à tela de login de operador">SAIR</button>
+  <button id="abrirEscolhaOperador" type="button" hidden>🔄 TROCAR OPERADOR</button>
+</div>
+<dialog id="adminPrincipalDialog" class="authDialog admin-principal-dialog" aria-labelledby="adminPrincipalTitulo">
+ <h2 id="adminPrincipalTitulo">🔐 Administrador Principal</h2>
+ <p id="adminPrincipalDescricao">Acesso restrito às funções administrativas.</p>
+ <label for="adminPrincipalSenha">Senha (4 a 8 caracteres)</label><input id="adminPrincipalSenha" type="password" minlength="4" maxlength="8" autocomplete="off">
+ <div id="adminPrincipalCriacao" hidden=""><label for="adminPrincipalConfirmacao">Confirmar nova senha</label><input id="adminPrincipalConfirmacao" type="password" minlength="4" maxlength="8" autocomplete="off"></div>
+ <p id="adminPrincipalErro" role="alert" style="color:#b00020" hidden=""></p>
+ <div class="admin-principal-acoes"><button id="adminPrincipalEntrar" type="button">Confirmar</button><button id="adminPrincipalCancelar" type="button" class="btn-secondary">Cancelar</button></div>
+ <section id="adminPrincipalPainel" hidden=""><p><strong>Perfil administrativo ativo.</strong> Exclusão de passagens do histórico autorizada.</p><button id="adminPrincipalLimparAuditoria" class="btn-danger" type="button">🗑️ Limpar TODA a auditoria do sistema</button><button id="adminPrincipalSair" type="button" class="btn-secondary">Sair do administrador</button><p class="legenda">Antes de limpar os registros, faça um backup. A exclusão não poderá ser desfeita.</p></section>
+</dialog>
+<div id="operadorModal" class="operador-modal" role="dialog" aria-modal="true" aria-labelledby="operadorModalTitulo" hidden="">
+  <div class="operador-modal-painel"><h2 id="operadorModalTitulo">👤 Identificação anterior desativada</h2><p>O acesso agora é feito com senha individual.</p><label for="operadorPlantonistaSelect">Operador</label><select id="operadorPlantonistaSelect" aria-label="Operador" data-lista="[]"><option value="">— Selecione —</option></select><p id="operadorModalErro" role="alert" hidden="">Utilize o login seguro.</p><div class="operador-modal-acoes"><button id="confirmarEscolhaOperador" type="button">Continuar</button></div></div>
+</div>
+<div id="abdTituloPagina" class="abd-page-heading" aria-live="polite"><div><h2>Painel geral</h2><p>Visão geral da unidade</p></div></div>
+<header>
+    <h2>Controle de Acolhimento</h2>
+    <div class="header-controles">
+        <div class="header-linha header-linha-principal">
+            <!-- Seletor mantido fora da visualização por compatibilidade com os dados e rotinas existentes. -->
+            <select id="selectPlantao" hidden="" aria-label="Plantão interno">
+                <option value="Plantao 1">Plantão 1 (24h)</option>
+                <option value="Plantao 2">Plantão 2</option>
+            </select>
+            <button id="btnAbrirControleEntradaSaida" type="button" class="btn-atalho-acesso v24-atalho-legado">Acesso 🚪</button>
+            <div class="grupo-relatorio grupo-relatorio-nomes">
+                <button id="btnGerarODTRelacaoNomes" type="button" class="btn-atalho-nomes v24-atalho-legado">Gerar Lista</button><button type="button" id="btnConfigurarRelacao" class="btn-atalho-local" title="Configurar tabela da Relação de Nomes">⚙️ Configurar relação</button>
+                <span class="seta-relatorio" aria-hidden="true">➡</span>
+                <button id="btnPastaODTNomes" type="button" class="btn-atalho-local pasta-configurada" title="Pasta selecionada: RELAÇÃO DIÁRIA — clique para alterar"><span id="rotuloPastaNomes">Relação Diária</span> <span id="iconePastaODTNomes" aria-hidden="true">🗂️</span></button>
+                <span id="nomePastaODTNomes" class="pasta-selecionada configurada" title="Pasta selecionada: RELAÇÃO DIÁRIA">RELAÇÃO DIÁRIA</span>
+            </div>
+        </div>
+        <div class="header-linha header-linha-secundaria">
+            <div class="grupo-relatorio grupo-relatorio-planilha">
+                <button id="btnBaixarODT" type="button" class="btn-atalho-planilha">Gerar Planilha</button>
+                <span class="seta-relatorio" aria-hidden="true">➡</span>
+                <button id="btnPastaODTPlanilha" type="button" class="btn-atalho-local pasta-configurada" title="Pasta selecionada: 10 Outubro — clique para alterar"><span id="rotuloPastaPlanilha">Local</span> <span id="iconePastaODTPlanilha" aria-hidden="true">🗂️</span></button>
+                <span id="nomePastaODTPlanilha" class="pasta-selecionada configurada" title="Pasta selecionada: 10 Outubro">10 Outubro</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<section id="painelConfiguracaoRelacao" class="card relacao-config" hidden aria-label="Configurar Relação de Nomes">
+ <div class="relacao-config-titulo"><h3>📋 Relação de Nomes — personalizar tabela</h3><button type="button" id="fecharConfiguracaoRelacao" class="btn-secondary">✕ Fechar</button></div>
+ <div class="relacao-config-opcoes" id="relacaoOpcoesPainel"><label><input id="relacaoMostrarIdade" type="checkbox"> Incluir idade ao lado do nome</label><label><input id="relacaoEntradaSaida" type="checkbox"> Entrada e Saída</label><label id="relacaoQuantidadeWrap" hidden>Quantidade de pares: <input id="relacaoQuantidade" type="number" min="1" max="8" value="2" style="width:76px"></label><button type="button" id="relacaoGerarConfigurada" class="btn-success relacao-gerar-inline">📄 Gerar Lista com este formato</button></div>
+ <p class="legenda" id="relacaoOpcoesAjuda">Cada par acrescenta duas colunas na ordem Entrada, Saída. As células de horários e observações podem ser preenchidas na prévia e serão incluídas no ODT. A configuração e os textos ficam salvos neste navegador.</p>
+ <div id="relacaoTabelaPreview" class="relacao-tabela-scroll" aria-live="polite"></div>
+</section>
+<section class="abd-dashboard" id="abdPainelGeral" aria-label="Indicadores gerais de acolhimento"><div class="abd-stat"><span class="abd-stat-icon">👥</span><div class="abd-stat-text"><span>Acolhidos</span><strong id="abdTotalPessoas">—</strong></div></div><div class="abd-stat"><span class="abd-stat-icon">🛏️</span><div class="abd-stat-text"><span>Vagas disponíveis</span><strong id="abdTotalVagas">—</strong></div></div><div class="abd-stat"><span class="abd-stat-icon">🏠</span><div class="abd-stat-text"><span>Quartos exibidos</span><strong id="abdTotalQuartos">—</strong></div></div><div class="abd-stat"><span class="abd-stat-icon">🗂️</span><div class="abd-stat-text"><span>VEPEMA · vagas</span><strong id="abdTotalVepema">—</strong></div></div></section>
+<!-- Resumos completos movidos dos filtros para o Painel Geral: IDs preservados para os cálculos em tempo real. -->
+<div class="tabela-filtro-quartos abd-resumos-gerais" data-abd-page="painel" aria-label="Resumo atualizado de acolhidos e vagas"><section class="painel-contagem painel-acolhidos" aria-label="Quantidade de pessoas acolhidas">
+      <h4>Total de acolhidos: <span id="resumoTotalAcolhidos">—</span></h4>
+      <div class="contagem-linha"><span>Mulheres:</span><strong id="resumoMulheres">—</strong></div>
+      <div class="contagem-linha"><span>Homens:</span><strong id="resumoHomens">—</strong></div>
+      <div class="contagem-linha"><span>Crianças:</span><strong id="resumoCriancas">—</strong></div>
+      <div class="contagem-linha"><span>Adolescentes:</span><strong id="resumoAdolescentes">—</strong></div>
+      <div class="contagem-linha"><span>Idosos(as):</span><strong id="resumoIdosos">—</strong></div>
+      <div class="contagem-linha"><span>Trans:</span><strong id="resumoTrans">—</strong></div>
+    </section><section class="painel-contagem painel-vagas" aria-label="Quantidade de vagas disponíveis">
+      <h4>Total de Vagas: <span id="resumoTotalVagas">—</span></h4>
+      <div class="contagem-linha"><span>Mulher:</span><strong id="resumoVagasMulher">—</strong></div>
+      <div class="contagem-linha"><span>Homem:</span><strong id="resumoVagasHomem">—</strong></div>
+      <div class="contagem-linha"><span>Idoso(a):</span><strong id="resumoVagasIdoso">—</strong></div>
+      
+      <div class="contagem-linha"><span>Trans:</span><strong id="resumoVagasTrans">—</strong></div>
+      <div class="contagem-linha" style="color: red"><span>VEPEMA:</span><strong id="resumoVagasVepema">—</strong></div><div class="contagem-linha"><span>Outro:</span><strong id="resumoVagasOutro">—</strong></div>
+    </section>
+
+    
+</div>
+
+<div id="pastaODTInfo" class="legenda" style="margin:4px 12px;line-height:1.4" aria-live="polite" hidden=""></div>
+<div class="backup-panel backup-reorganizado">
+    <button class="btn-secondary" id="btnEscolherPastaBackup" type="button">📁 Local Backup</button>
+    <span id="pastaBackupStatus" class="backup-pasta-descricao" aria-live="polite">Pasta de backup de 2026-10: BACKUP</span>
+    <button class="btn-success" id="btnExportar" type="button">💾 Fazer Backup</button>
+    <label for="arquivoBackup" class="backup-importar-label">🗃️ Carregar Backup</label>
+    <input type="file" id="arquivoBackup" style="display:none" accept=".json,application/json">
+    <button class="btn-secondary" id="btnRestaurarUltimo" type="button">↩️ Restaurar Último Backup</button>
+</div>
+
+<section id="v24TrocaAtualizacoes" class="card" style="margin:14px 0;border:1px solid #b9d5ea;background:#f4faff;color:#18364e;border-radius:14px;padding:18px;max-width:100%" aria-labelledby="v24TrocaTitulo">
+ <h3 id="v24TrocaTitulo" style="margin:0 0 8px">🔄 Troca manual de atualizações entre computadores</h3>
+ <p style="margin:0 0 12px">Transfira um pacote criptografado pelo WhatsApp (como documento). <strong>Não utilize “Carregar Backup” para incorporar alterações de outros computadores:</strong> ele substitui os dados atuais.</p>
+ <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+  <button type="button" id="v24SyncExport" class="btn-success">📤 Exportar atualizações</button>
+  <button type="button" id="v24SyncChooseFolder" class="btn-secondary" title="Escolher pasta onde serão salvos os pacotes exportados">📂 Definir local de exportação</button>
+  <span id="v24SyncFolderStatus" aria-live="polite" class="v24-sync-pasta-status">📥 Download padrão do navegador</span>
+  <button type="button" id="v24SyncImport" class="btn-secondary">📥 Importar atualizações</button>
+  <input type="file" id="v24SyncFile" accept=".json,application/json" hidden>
+  <button type="button" id="v24SyncReset" class="btn-secondary" title="Iniciar novo ponto de referência, sem excluir os dados">⚙️ Definir base inicial</button>
+ </div>
+ <div id="v24SyncDropzone" class="v24-sync-dropzone" role="button" tabindex="0" aria-label="Arraste um arquivo de atualizações JSON criptografado ou pressione Enter para selecionar" aria-describedby="v24SyncDropAjuda">
+  <span class="v24-sync-drop-icon" aria-hidden="true">📥</span>
+  <div><strong>Arraste o arquivo de atualizações aqui</strong><br><span id="v24SyncDropAjuda">Ou clique nesta área para escolher o pacote <code>.json</code> criptografado.</span></div>
+ </div>
+ <div class="v24-whatsapp-share-area" aria-label="Compartilhar pacote pelo WhatsApp">
+  <label for="v24SyncWhatsAppNumero">Número de WhatsApp do destinatário <small>(DDD + número; código do Brasil 55 é opcional)</small></label>
+  <div class="v24-whatsapp-share-row">
+   <input id="v24SyncWhatsAppNumero" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex.: 69 99999-9999" aria-describedby="v24WhatsAppHelp">
+   <button type="button" id="v24SyncWhatsApp" class="v24-whatsapp-share-button">💬 Compartilhar via WhatsApp</button>
+   <div class="v24-whatsapp-template-box">
+    <label for="v24SyncWhatsAppModelo">Link modelo para abrir conversa</label>
+    <div class="v24-wa-modelo-controles">
+     <input type="url" id="v24SyncWhatsAppModelo" value="https://wa.me/{numero}?text={mensagem}" spellcheck="false" autocomplete="off" aria-describedby="v24WhatsAppModeloAjuda" placeholder="https://web.whatsapp.com/send/?phone=5569984734577">
+     <button type="button" id="v24SyncWhatsAppSalvarModelo" class="v24-wa-modelo-salvar">💾 Salvar</button>
+     <button type="button" id="v24SyncWhatsAppAbrirModelo" class="v24-wa-modelo-abrir">↗ Abrir</button>
+    </div>
+    <small id="v24WhatsAppModeloAjuda">Aceita link fixo do WhatsApp Web ou modelo com {numero} e {mensagem}. Salve o link para reutilizar neste navegador.</small>
+   </div>
+  </div>
+  <p id="v24WhatsAppHelp">1. Clique em <strong>Exportar atualizações</strong> e salve o arquivo criptografado. 2. Informe o telefone e clique em <strong>Compartilhar via WhatsApp</strong>. 3. Na conversa aberta, anexe o arquivo <strong>.json como Documento</strong>. O link não anexa arquivos automaticamente; envie a senha por outro meio seguro.</p>
+ </div>
+ <p id="v24SyncStatus" role="status" aria-live="polite" style="font-size:13px;margin:12px 0 0">Preparando controle de atualizações…</p>
+ <p style="font-size:12px;color:#5a6e80;margin:8px 0 0">Primeiro importe o mesmo backup completo em todos os computadores e defina a base inicial em cada um. Pacotes são incrementais e não representam sincronização em tempo real. Exclusões e conflitos são bloqueados para revisão manual.</p>
+</section>
+<div class="card hidden-area">
+    <h3>Gestão de Funcionários do Plantão (fora da área de impressão)</h3>
+    <div class="gestao-equipes-grade">
+      <section class="gestao-equipe-bloco" id="blocoEquipeAdmin">
+        <div class="gestao-equipe-cabecalho"><h4>Plantonistas (Administrativos / Geral)</h4><button type="button" class="btn-recolher-equipe" data-equipe="admin" aria-expanded="false" aria-controls="conteudoEquipeAdmin">+ Maximizar</button></div>
+        <div id="conteudoEquipeAdmin" class="gestao-equipe-conteudo" hidden="">
+          <div id="abasPlantonistas" class="abas-equipes" aria-label="Abas de plantões administrativos"><span class="aba-equipe-item"><button type="button" class="aba-equipe-botao ativa" aria-pressed="true">Plantão 1</button></span><span class="aba-equipe-item"><button type="button" class="aba-equipe-botao" aria-pressed="false">Plantão 2</button><button type="button" title="Excluir Plantão 2" class="aba-equipe-excluir">×</button></span><span class="aba-equipe-item"><button type="button" class="aba-equipe-botao" aria-pressed="false">Plantão 3</button><button type="button" title="Excluir Plantão 3" class="aba-equipe-excluir">×</button></span><span class="aba-equipe-item"><button type="button" class="aba-equipe-botao" aria-pressed="false">Plantão 4</button><button type="button" title="Excluir Plantão 4" class="aba-equipe-excluir">×</button></span><button type="button" class="aba-equipe-adicionar">+ Novo plantão</button></div>
+          <ul id="ulPlantao1" class="lista-funcionarios"><li><label class="nome-funcionario-label">Nome: <input class="nome-funcionario" type="text" aria-label="Nome do funcionário"></label><label class="funcao-plantonista-label">Função: <select class="funcao-plantonista"><option value="">— Selecione —</option><option value="Aux. Serv. Sociais">Aux. Serv. Sociais</option><option value="Aux. Serv. Gerais">Aux. Serv. Gerais</option><option value="Cuidador Social">Cuidador Social</option><option value="Educador Social">Educador Social</option><option value="Assist. Social">Assist. Social</option><option value="Cozinheiro(a)">Cozinheiro(a)</option><option value="Coordenador">Coordenador</option><option value="Psicologo">Psicologo</option></select></label><select class="escala-func"><option value="12x36">12x36</option><option value="24x72">24x72</option><option value="24h">24h</option></select><button class="btn-danger">Remover</button></li><li><label class="nome-funcionario-label">Nome: <input class="nome-funcionario" type="text" aria-label="Nome do funcionário"></label><label class="funcao-plantonista-label">Função: <select class="funcao-plantonista"><option value="">— Selecione —</option><option value="Aux. Serv. Sociais">Aux. Serv. Sociais</option><option value="Aux. Serv. Gerais">Aux. Serv. Gerais</option><option value="Cuidador Social">Cuidador Social</option><option value="Educador Social">Educador Social</option><option value="Assist. Social">Assist. Social</option><option value="Cozinheiro(a)">Cozinheiro(a)</option><option value="Coordenador">Coordenador</option><option value="Psicologo">Psicologo</option></select></label><select class="escala-func"><option value="12x36">12x36</option><option value="24x72">24x72</option><option value="24h">24h</option></select><button class="btn-danger">Remover</button></li><li><label class="nome-funcionario-label">Nome: <input class="nome-funcionario" type="text" aria-label="Nome do funcionário"></label><label class="funcao-plantonista-label">Função: <select class="funcao-plantonista"><option value="">— Selecione —</option><option value="Aux. Serv. Sociais">Aux. Serv. Sociais</option><option value="Aux. Serv. Gerais">Aux. Serv. Gerais</option><option value="Cuidador Social">Cuidador Social</option><option value="Educador Social">Educador Social</option><option value="Assist. Social">Assist. Social</option><option value="Cozinheiro(a)">Cozinheiro(a)</option><option value="Coordenador">Coordenador</option><option value="Psicologo">Psicologo</option></select></label><select class="escala-func"><option value="12x36">12x36</option><option value="24x72">24x72</option><option value="24h">24h</option></select><button class="btn-danger">Remover</button></li><li><label class="nome-funcionario-label">Nome: <input class="nome-funcionario" type="text" aria-label="Nome do funcionário"></label><label class="funcao-plantonista-label">Função: <select class="funcao-plantonista"><option value="">— Selecione —</option><option value="Aux. Serv. Sociais">Aux. Serv. Sociais</option><option value="Aux. Serv. Gerais">Aux. Serv. Gerais</option><option value="Cuidador Social">Cuidador Social</option><option value="Educador Social">Educador Social</option><option value="Assist. Social">Assist. Social</option><option value="Cozinheiro(a)">Cozinheiro(a)</option><option value="Coordenador">Coordenador</option><option value="Psicologo">Psicologo</option></select></label><select class="escala-func"><option value="12x36">12x36</option><option value="24x72">24x72</option><option value="24h">24h</option></select><button class="btn-danger">Remover</button></li><li><label class="nome-funcionario-label">Nome: <input class="nome-funcionario" type="text" aria-label="Nome do funcionário"></label><label class="funcao-plantonista-label">Função: <select class="funcao-plantonista"><option value="">— Selecione —</option><option value="Aux. Serv. Sociais">Aux. Serv. Sociais</option><option value="Aux. Serv. Gerais">Aux. Serv. Gerais</option><option value="Cuidador Social">Cuidador Social</option><option value="Educador Social">Educador Social</option><option value="Assist. Social">Assist. Social</option><option value="Cozinheiro(a)">Cozinheiro(a)</option><option value="Coordenador">Coordenador</option><option value="Psicologo">Psicologo</option></select></label><select class="escala-func"><option value="12x36">12x36</option><option value="24x72">24x72</option><option value="24h">24h</option></select><button class="btn-danger">Remover</button></li><li><label class="nome-funcionario-label">Nome: <input class="nome-funcionario" type="text" aria-label="Nome do funcionário"></label><label class="funcao-plantonista-label">Função: <select class="funcao-plantonista"><option value="">— Selecione —</option><option value="Aux. Serv. Sociais">Aux. Serv. Sociais</option><option value="Aux. Serv. Gerais">Aux. Serv. Gerais</option><option value="Cuidador Social">Cuidador Social</option><option value="Educador Social">Educador Social</option><option value="Assist. Social">Assist. Social</option><option value="Cozinheiro(a)">Cozinheiro(a)</option><option value="Coordenador">Coordenador</option><option value="Psicologo">Psicologo</option></select></label><select class="escala-func"><option value="12x36">12x36</option><option value="24x72">24x72</option><option value="24h">24h</option></select><button class="btn-danger">Remover</button></li></ul>
+          <button data-add-func="ulPlantao1">+ Adicionar Plantonista</button>
+        </div>
+      </section>
+      <section class="gestao-equipe-bloco" id="blocoEquipeVigilantes">
+        <div class="gestao-equipe-cabecalho"><h4>Plantonistas Vigilantes (Escala Diária)</h4><button type="button" class="btn-recolher-equipe" data-equipe="vigilantes" aria-expanded="false" aria-controls="conteudoEquipeVigilantes">+ Maximizar</button></div>
+        <div id="conteudoEquipeVigilantes" class="gestao-equipe-conteudo" hidden="">
+          <div id="abasVigilantes" class="abas-equipes" aria-label="Abas de plantões vigilantes"><span class="aba-equipe-item"><button type="button" class="aba-equipe-botao ativa" aria-pressed="true">Plantão 1</button></span><span class="aba-equipe-item"><button type="button" class="aba-equipe-botao" aria-pressed="false">Plantão 2</button><button type="button" title="Excluir Plantão 2" class="aba-equipe-excluir">×</button></span><button type="button" class="aba-equipe-adicionar">+ Novo plantão</button></div>
+          <ul id="ulVigilantes" class="lista-funcionarios"><li><label class="nome-funcionario-label">Nome: <input class="nome-funcionario" type="text" aria-label="Nome do funcionário"></label><select class="escala-func"><option value="12x36">12x36</option><option value="24x72">24x72</option><option value="24h">24h</option></select><label class="turno-vigilante-label">Plantão: <select class="turno-vigilante"><option value="Dia">Dia</option><option value="Noite">Noite</option></select></label><button class="btn-danger">Remover</button></li><li><label class="nome-funcionario-label">Nome: <input class="nome-funcionario" type="text" aria-label="Nome do funcionário"></label><select class="escala-func"><option value="12x36">12x36</option><option value="24x72">24x72</option><option value="24h">24h</option></select><label class="turno-vigilante-label">Plantão: <select class="turno-vigilante"><option value="Dia">Dia</option><option value="Noite">Noite</option></select></label><button class="btn-danger">Remover</button></li></ul>
+          <button data-add-func="ulVigilantes">+ Adicionar Vigilante</button>
+        </div>
+      </section>
+    </div>
+</div>
+
+
+<div class="status-cadastros-linha">
+  <div id="statusBar" class="status-bar">✓ Sistema offline pronto. Dados armazenados neste computador.</div>
+</div>
+
+<div id="controleEntradaSaidaPanel">
+  <div class="controle-es-panel-head">
+    <div class="controle-es-titulo-data"><h3>🔑 Controle de Entrada e Saída</h3><label for="controleESDataLista">Data: <input type="date" id="controleESDataLista" aria-label="Data da lista do controle de entrada e saída"></label></div>
+    <button id="btnFecharControleEntradaSaida" type="button" class="btn-secondary">✕ Fechar</button>
+  </div>
+  <div class="controle-es-legenda">Os quartos são organizados automaticamente em ordem crescente. Os nomes e quartos vêm do cadastro atual; os horários, observações e controle da chave são registrados neste controle diário.</div>
+  <div class="controle-es-pesquisa">
+    <input id="controleEntradaSaidaBusca" type="text" placeholder="Pesquisar nome ou quarto..." autocomplete="off">
+    <button id="btnLimparBuscaControleES" type="button" class="btn-secondary">Limpar pesquisa</button>
+  </div>
+  <div class="controle-es-limpeza-geral">
+    <button id="btnLimparTodosHorariosControleES" type="button" title="Limpar os quatro horários e reiniciar suas checkboxes para todos os acolhidos">🧹 Limpar Tudo</button>
+  </div>
+  <div class="controle-es-opcoes-ordem"><label><input type="checkbox" id="controleESUsarOrdemOntem"> Utilizar a lista na ordem de ontem</label><small id="controleESOrdemMensagem" aria-live="polite">A ordem normal continua ativa enquanto a opção estiver desmarcada.</small></div>
+  <div class="controle-es-ordem">Por padrão, a lista segue os primeiros horários de saída registrados; sem saída, segue quarto e nome. Com a opção marcada, a ordem salva do dia anterior tem prioridade.</div>
+  <div class="controle-es-wrap">
+    <table class="controle-es-tabela">
+      <thead><tr>
+        <th>Quarto</th><th>Nome</th><th>Chave</th><th>Saída</th><th>Entrada</th><th>Saída</th><th>Entrada</th><th>Observação</th>
+      </tr></thead>
+      <tbody id="controleEntradaSaidaBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="controleChaveModalBackdrop" class="controle-chave-modal-backdrop" aria-hidden="true">
+  <div class="controle-chave-modal" role="dialog" aria-modal="true">
+    <h3>🔑 Controle da chave</h3>
+    <p id="controleChavePergunta"></p>
+    <div id="controleChaveOpcoes" class="controle-chave-opcoes"></div>
+    <button id="btnCancelarControleChave" type="button" class="controle-chave-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<div id="modalOcorrenciaChave" hidden role="dialog" aria-modal="true" aria-labelledby="tituloOcorrenciaChave">
+  <div class="ocorrencia-chave-painel">
+    <h3 id="tituloOcorrenciaChave">🔑 Ocorrência de chave</h3>
+    <p id="perguntaOcorrenciaChave"></p>
+    <div id="tipoOcorrenciaChaveWrap" hidden>
+      <label for="tipoOcorrenciaChave">Tipo da ocorrência</label>
+      <select id="tipoOcorrenciaChave"><option value="quebrado">Chave quebrada</option><option value="extravio">Chave extraviada</option></select>
+    </div>
+    <div id="campoObservacaoOcorrenciaChave" hidden>
+      <label for="observacaoOcorrenciaChave">Observação obrigatória</label>
+      <textarea id="observacaoOcorrenciaChave" placeholder="Descreva detalhadamente o ocorrido ou como a situação foi solucionada..."></textarea>
+    </div>
+    <div class="ocorrencia-chave-acoes">
+      <button type="button" class="ocorrencia-chave-cancelar" id="cancelarOcorrenciaChave">Cancelar</button>
+      <button type="button" class="ocorrencia-chave-confirmar" id="confirmarOcorrenciaChave">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="modalHistoricoOcorrenciaChave" hidden role="dialog" aria-modal="true" aria-labelledby="tituloHistoricoOcorrenciaChave">
+ <div class="ocorrencia-historico-painel">
+  <h3 id="tituloHistoricoOcorrenciaChave">💥 Auditoria da ocorrência de chave</h3>
+  <div id="resumoHistoricoOcorrenciaChave"></div>
+  <div id="listaHistoricoOcorrenciaChave"></div>
+  <button class="fechar-historico-chave" type="button" id="fecharHistoricoOcorrenciaChave">Fechar</button>
+ </div>
+</div>
+
+<div id="controleAutorizacaoModalBackdrop" class="controle-autorizacao-modal-backdrop" aria-hidden="true">
+  <div class="controle-autorizacao-modal" role="dialog" aria-modal="true">
+    <h3>👍 Autorização de Entrada e Saída</h3>
+    <div id="controleAutorizacaoMensagem" class="controle-autorizacao-motivo"></div>
+    <button id="btnFecharControleAutorizacao" type="button" class="controle-autorizacao-fechar">Fechar</button>
+  </div>
+</div>
+
+<div id="historicoPanel" class="historico-panel">
+    <h3 style="margin-top:0;color:#004080">🔎 Pesquisa de Histórico de Acolhimentos</h3>
+    <div class="historico-busca">
+        <input id="historicoBusca" type="text" placeholder="Digite o nome, CPF ou Nº Cartão SUS da pessoa para pesquisar..." autocomplete="off">
+        <button id="btnPesquisarHistorico" type="button">Pesquisar</button>
+        <button id="btnFecharHistorico" type="button" class="btn-secondary">Fechar</button>
+    </div>
+    <div class="historico-filtros-listagem">
+        <label class="historico-mostrar-todos"><input type="checkbox" id="historicoMostrarTodos"> Mostrar todos os registros do histórico</label>
+        <label for="historicoOrdenacao">Organizar registros por:</label>
+        <select id="historicoOrdenacao">
+            <option value="recentes">Entrada mais recente (padrão)</option>
+            <option value="az">Nome: A–Z</option>
+            <option value="za">Nome: Z–A</option>
+            <option value="idade-crescente">Idade: crescente</option>
+            <option value="idade-decrescente">Idade: decrescente</option>
+        </select>
+    </div>
+    <div id="arquivosHistoricosBarra" style="margin:10px 0;padding:9px;background:#eef4ff;border:1px solid #bdd3ed;border-radius:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <strong>📚 Arquivos históricos (lotes de 400)</strong>
+      <button type="button" id="btnPastaArquivosHistoricos" class="btn-secondary">📁 Selecionar pasta dos históricos</button>
+      <button type="button" id="btnImportarArquivosHistoricos" class="btn-secondary">📥 Importar arquivos antigos</button>
+      <input type="file" id="inputImportarArquivosHistoricos" accept=".json,application/json" multiple="" hidden="">
+      <button type="button" id="btnExportarArquivosHistoricos" class="btn-secondary">📤 Baixar arquivos arquivados</button>
+      <span id="arquivosHistoricosStatus" role="status" style="font-size:12px">Banco ativo: 12 encerrado(s); arquivos: 0; passagens antigas consultáveis: 0.</span>
+    </div>
+    <input id="historicoFotoInput" type="file" accept="image/*" capture="environment" style="display:none">
+    <div id="historicoResultados" class="historico-resultados"></div>
+</div>
+
+<section id="filtroQuartos" class="card filtro-quartos" aria-label="Filtragem e pesquisa de quartos e pessoas">
+  <div style="display: flex;justify-content: space-around;align-items: center;">
+    <div>
+  <div class="acoes-todos-quartos" role="group" aria-label="Visualização de todos os quartos">
+    <h3>🔎 Filtragem e Pesquisa — Áreas</h3><button type="button" id="btnMaximizarTodosQuartos">▣ Maximizar todos</button>
+    <button type="button" id="btnMinimizarTodosQuartos">▤ Minimizar todos</button>
+	
+  </div>
+  <div class="filtro-quartos-conteudo">
+    <div class="filtro-quartos-opcoes" role="group" aria-label="Situação dos quartos">
+      <label><input type="checkbox" id="filtroTodosQuartos" checked=""> Todos os Quartos</label>
+      <label><input type="checkbox" id="filtroQuartosDisponiveis" checked=""> Quartos Disponíveis</label>
+      <label><input type="checkbox" id="filtroQuartosIndisponiveis" checked=""> Quartos Indisponíveis</label>
+     <div>
+      <label><input type="checkbox" id="filtroComVagas"> Com Vagas</label>
+      <label><input type="checkbox" id="filtroComPessoas"> Com Pessoas</label>
+    </div>
+    </div>
+    
+  </div>
+  
+  <div class="filtro-quartos-pesquisa">
+      <label for="filtroBuscaQuartoPessoa">Busca:</label>
+      <input type="search" id="filtroBuscaQuartoPessoa" placeholder="Buscar pessoa ou quarto..." autocomplete="off">
+      <button type="button" id="filtroLimparBusca" class="btn-secondary">Limpar</button>
+    <div id="filtroQuartosResultado" class="filtro-quartos-resultado" aria-live="polite">Carregando quartos…</div></div>
+        
+
+</div>
+  
+    
+    
+  </div>
+</section>
+
+<!-- A área é construída pelo render() com base nos dados locais; não guardar dados pessoais renderizados aqui. -->
+<div class="modo-quartos-toolbar" aria-label="Modo de visualização dos quartos">
+  <div><strong>🏠 Quartos e acolhidos</strong><span> Consulte a ocupação ou abra os cadastros completos.</span></div>
+  <div class="modo-quartos-botoes" role="group" aria-label="Escolher visualização">
+    <button type="button" id="modoQuartosCartoes" aria-pressed="true">▦ Cartões</button>
+    <button type="button" id="modoQuartosMapa" aria-pressed="false">▦ Mapa de ocupação</button>
+    <button type="button" id="modoQuartosDetalhes" aria-pressed="false">☷ Detalhes completos</button>
+  </div>
+  <div class="cadastro-acesso-barra"><button type="button" id="btnCriarCadastroAcesso">👤 Criar Cadastro de Acesso</button> <button type="button" id="btnCriarCadastroAnterior">👤 Criar Cadastro de Acesso Anterior</button></div>
+</div>
+<section id="abdPaginaAuditoria" class="card" data-abd-page="auditoria"><h3>📋 Auditoria</h3><p>Consulte os registros de alterações do sistema. A abertura do histórico de auditoria continua protegida pelas permissões existentes.</p><button type="button" id="abdAbrirAuditoria">📋 Abrir registros de auditoria</button></section>
+<div id="abdMapaQuartos" class="abd-map" aria-label="Mapa visual de ocupação"><div class="abd-map-intro"><strong>Mapa visual de ocupação</strong><p style="margin:5px 0;color:#607b91">Selecione um quarto para abrir seu cadastro completo. As cores são atualizadas com os dados da unidade.</p><div class="abd-map-legend">🟢 Disponível　🟡 Com vagas　🔴 Ocupado　⚪ Indisponível　🟣 VEPEMA</div></div></div>
+<div id="areas"></div>
+
+<!-- O formulário real permanece em #areas; a janela apenas o apresenta em primeiro plano. -->
+<div id="abdModalQuartoFundo" class="abd-modal-quarto-fundo" hidden></div>
+<div id="abdModalQuartoTopo" class="abd-modal-quarto-topo" role="dialog" aria-modal="true" aria-label="Gerenciar quarto" hidden>
+  <div class="abd-modal-quarto-titulo"><strong id="abdModalQuartoTitulo">Gerenciar quarto</strong><span>Alterações feitas no cadastro original</span></div>
+  <div class="abd-modal-quarto-abas" role="tablist" aria-label="Seções do quarto">
+    <button type="button" data-abd-modal-aba="quarto" role="tab">🛏️ Quarto</button>
+    <button type="button" data-abd-modal-aba="pessoas" role="tab">👥 Pessoas</button>
+    <button type="button" data-abd-modal-aba="tudo" role="tab">☷ Tudo</button>
+  </div>
+  <button type="button" id="abdModalQuartoFechar" class="abd-modal-quarto-fechar" aria-label="Fechar janela">✕ Fechar</button>
+</div>
+
+<div id="areaImpressao" class="area-impressao" aria-hidden="true"></div>
+
+<div class="confirmacao-camas-backdrop" id="confirmacaoCamasPadrao">
+    <div class="confirmacao-camas">
+        <div class="confirmacao-camas-mensagem">Para alterar a quantidade padrão de camas deste quarto, CONFIRME</div>
+        <div class="confirmacao-camas-acoes">
+            <button type="button" class="btn-confirmar-camas" id="btnConfirmarCamasPadrao">CONFIRMAR</button>
+            <button type="button" class="btn-cancelar-camas" id="btnCancelarCamasPadrao">CANCELAR</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="modalConfig">
+    <div class="modal">
+        <h3>Configuração do quarto</h3>
+        <div id="modalConteudo"></div>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="modalCancelar">Cancelar</button>
+            <button id="modalSalvar">Salvar configuração</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="../js/script-01.js"></script>
+
+
+<script src="../js/script-02.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+<dialog id="cadastroAcessoDialog" aria-labelledby="cadastroAcessoTitulo">
+<h2 id="cadastroAcessoTitulo">👤 Criar Cadastro de Acesso</h2>
+<p>Cadastre a pessoa e selecione um quarto com vagas. A saída é registrada somente quando ocorrer.</p>
+<form id="cadastroAcessoForm">
+<label>Nome completo *<input name="nome" required="" maxlength="180"></label>
+<label>Data de nascimento<input name="nascimento" type="date"></label>
+<label>Gênero<select name="genero"><option value="">Não informado</option><option>Feminino</option><option>Masculino</option><option>Idoso</option><option>Trans</option><option>Outro</option></select></label>
+<label>Quarto com vagas *<select name="quarto" required=""></select></label>
+<label>CPF<input name="cpf" type="text" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" autocomplete="off"></label>
+<label>Identidade<input name="identidade" maxlength="40"></label>
+<label>Nº Cartão SUS<input name="cartaoSus" maxlength="35"></label>
+<label>Origem/Nacionalidade<input name="origemNacionalidade"></label>
+<label>Responsável (nome)<input name="responsavel"></label>
+<label>Data de entrada<input name="entrada" type="date"></label>
+<label>Data de saída<input name="saida" type="date"></label>
+<label>Advertências<input name="advertencia" type="number" min="0" max="10" value="0"></label>
+<label>Acessibilidade<select name="acessibilidade"><option value="nao">Não</option><option value="sim">Sim</option></select></label>
+<label class="cadastro-largo">Necessidade de acessibilidade<input name="necessidadeAcessibilidade"></label>
+<label class="cadastro-largo">Observação<textarea name="observacao" rows="3"></textarea></label>
+<div class="cadastro-acoes cadastro-largo"><button type="button" id="cadastroAcessoCancelar">Cancelar</button><button type="submit">Salvar Cadastro</button></div>
+</form>
+</dialog>
+<script src="../js/script-03.js"></script>
+
+
+<dialog id="cadastroAnteriorDialog" aria-labelledby="cadastroAnteriorTitulo">
+<h2 id="cadastroAnteriorTitulo">👤 Criar Cadastro de Acesso Anterior</h2>
+<p>Registre uma passagem já encerrada. Este cadastro será salvo somente no Histórico de Acolhimentos, sem ocupar vagas atuais.</p>
+<form id="cadastroAnteriorForm">
+<label>Nome completo *<input name="nome" required="" maxlength="180"></label>
+<label>Data de nascimento<input name="nascimento" type="date"></label>
+<label>Gênero<select name="genero"><option value="">Não informado</option><option>Feminino</option><option>Masculino</option><option>Idoso</option><option>Trans</option><option>Outro</option></select></label>
+<label>Quarto utilizado *<select name="quarto" required=""></select></label>
+<label>CPF<input name="cpf" type="text" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" autocomplete="off"></label>
+<label>Identidade<input name="identidade" maxlength="40"></label>
+<label>Nº Cartão SUS<input name="cartaoSus" maxlength="35"></label>
+<label>Origem/Nacionalidade<input name="origemNacionalidade"></label>
+<label>Responsável (nome)<input name="responsavel"></label>
+<label>Data de entrada anterior *<input name="entrada" type="date" required=""></label>
+<label>Data de saída efetiva *<input name="saida" type="date" required=""></label>
+<label>Advertências<input name="advertencia" type="number" min="0" max="10" value="0"></label>
+<label>Acessibilidade<select name="acessibilidade"><option value="nao">Não</option><option value="sim">Sim</option></select></label>
+<label class="cadastro-largo">Necessidade de acessibilidade<input name="necessidadeAcessibilidade"></label>
+<label class="cadastro-largo">Observação da passagem<textarea name="observacao" rows="3"></textarea></label>
+<div class="cadastro-acoes cadastro-largo"><button type="button" id="cadastroAnteriorCancelar">Cancelar</button><button type="submit">Salvar no Histórico</button></div>
+</form>
+</dialog>
+<script src="../js/script-04.js"></script>
+
+
+
+<dialog id="dialogTransferenciaQuarto" aria-labelledby="transferenciaTitulo">
+<h2 id="transferenciaTitulo">⇄ Transferência de quarto</h2>
+<p id="transferenciaPessoaNome"></p>
+<label for="transferenciaQuartoDestino">Selecione um quarto disponível com vagas:</label>
+<select id="transferenciaQuartoDestino"></select>
+<p>A transferência mantém as datas de entrada e saída, advertências, identificação e demais dados da pessoa. Não registra desligamento.</p>
+<div class="transferencia-acoes"><button type="button" onclick="document.getElementById('dialogTransferenciaQuarto').close()">Cancelar</button><button type="button" class="btn-success" onclick="confirmarTransferenciaQuarto()">Confirmar transferência</button></div>
+</dialog>
+
+
+<dialog id="authAuditDialog" class="authDialog"><div class="auditoria-cabecalho"><button type="button" class="auditoria-fechar-superior" onclick="document.getElementById('authAuditDialog').close()">✕ Fechar</button><h2>Histórico de alterações</h2></div><label>Pesquisar por nome ou quarto<input id="authAuditFilter" placeholder="Nome da pessoa ou quarto"></label><div id="authAuditList"></div><div id="authAuditAdminActions" class="auditoria-admin-acoes" hidden=""><button id="authAuditClearBtn" class="btn-danger" type="button">🗑️ Limpar auditoria desta pessoa</button><p id="authAuditClearHelp" class="legenda">Exclui somente os registros da pessoa selecionada. Os demais registros serão preservados.</p></div></dialog>
+
+<script id="authOfflineScript" src="../js/script-05.js"></script>
+<dialog id="dialogInformacoesHistorico" class="dialog-hist-info"><h3 class="hist-info-titulo"></h3><div class="hist-info-corpo"></div><form method="dialog"><button type="submit">Fechar</button></form></dialog>
+
+
+<!-- Confirmação de saída: necessária para que o campo Data de Saída seja salvo. -->
+<dialog id="confirmarDesligamentoDialog" class="authDialog" aria-labelledby="confirmarDesligamentoTitulo" style="max-width:480px;width:calc(100% - 32px);padding:22px;border:1px solid #b8c7d6;border-radius:12px;box-shadow:0 14px 45px #0005;">
+  <h3 id="confirmarDesligamentoTitulo">Confirmar desligamento</h3>
+  <p>Deseja registrar a saída de <strong data-desligamento-nome=""></strong> em <strong data-desligamento-data=""></strong>?</p>
+  <p>Após confirmar, a vaga será recalculada e a passagem ficará registrada no histórico de acolhimentos.</p>
+  <div class="desligamento-acoes">
+    <button type="button" data-desligamento-cancelar="" class="btn-secondary">Cancelar</button>
+    <button type="button" data-desligamento-confirmar="" class="btn-danger">Confirmar saída</button>
+  </div>
+</dialog>
+
+
+
+<script id="mascara-cpf-global" src="../js/script-06.js"></script>
+<script id="gestaoEquipesRecolherScript" src="../js/script-07.js"></script>
+<div id="modalArquivoGerado" role="dialog" aria-modal="true" aria-labelledby="tituloArquivoGerado">
+ <div class="arquivo-gerado-painel">
+  <h2 id="tituloArquivoGerado">✅ Arquivo gerado</h2>
+  <p id="descricaoArquivoGerado"></p>
+  <p><strong>Arquivo:</strong> <span id="nomeArquivoGerado"></span></p>
+  <div class="arquivo-gerado-acoes">
+   <button type="button" class="btn-success" id="btnVisualizarPastaGerada">📂 Visualizar pasta</button>
+   <button type="button" class="btn-secondary" id="btnFecharArquivoGerado">Fechar</button>
+  </div>
+  <div id="exploradorArquivoGerado" hidden="">
+   <strong id="tituloExploradorArquivoGerado"></strong>
+   <div id="listaExploradorArquivoGerado" class="arquivo-gerado-lista" aria-live="polite"></div>
+   <p class="arquivo-gerado-nota">Consulta somente leitura da pasta autorizada. O arquivo recém-gerado fica destacado. Esta janela não abre o Explorador do Windows.</p>
+  </div>
+ </div>
+</div>
+<script id="visualizadorPastasGeradas" src="../js/script-08.js"></script>
+
+
+<script src="../js/script-09.js"></script>
+
+<script id="abd-navegacao-abas-reais" src="../js/script-10.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="abdCofreTela" role="dialog" aria-modal="true" aria-label="Acesso seguro ao sistema">
+  <div class="abd-cofre-painel">
+    <h2 id="abdCofreTitulo">🔐 Entrar - Sistema de Acolhimento</h2>
+    <p id="abdCofreDescricao"></p>
+    <div id="abdCofreFormulario"></div>
+    <p id="abdCofreErro" role="alert"></p>
+    <div id="abdCofreAcoes" class="abd-cofre-acoes"></div>
+  </div>
+</div>
+<script id="abd-cofre-acesso-script" src="../js/script-11.js"></script>
+
+
+
+
+
+
+
+
+
+
+<section id="abdMedicamentos" data-abd-page="medicamentos" class="med-modulo" aria-label="Controle de medicamentos">
+ <div class="med-head"><h2>💊 Controle de Medicamentos</h2><p>Gestão local de estoque, prescrições e administração. Registre apenas conforme prescrição e autorização profissional.</p></div>
+ <nav class="med-tabs" aria-label="Áreas de medicamentos"><button type="button" data-med-tab="agenda" class="med-selected">📅 Administração diária</button><button type="button" data-med-tab="prescricoes">📋 Prescrições</button><button type="button" data-med-tab="estoque">📦 Estoque</button><button type="button" data-med-tab="auditoria">🕒 Histórico e auditoria</button></nav>
+ <div id="medMsg" role="status" aria-live="polite"></div>
+ <div id="medAgenda" class="med-view"><div class="med-row"><label>Data <input id="medData" type="date"></label><label>Situação <select id="medFiltro"><option value="todos">Todas</option><option value="pendente">Pendentes</option><option value="administrado">Administradas</option><option value="nao_administrado">Não administradas</option></select></label><button id="medAtualizar" type="button">🔄 Atualizar</button></div><div class="med-tablewrap"><table><thead><tr><th>Horário</th><th>Acolhido / quarto</th><th>Medicamento e dose prescrita</th><th>Status</th><th>Ação</th></tr></thead><tbody id="medListaAgenda"></tbody></table></div></div>
+ <div id="medPrescricoes" class="med-view" hidden><h3>Nova prescrição</h3><form id="medPrescForm" class="med-form med-prescricao-form">
+<h4 class="med-prescricao-titulo" id="medPrescTitulo">Nova prescrição</h4><div id="medAvisoEdicao" hidden class="med-prescricao-resumo">Modo edição: revise os dados e confirme as alterações.</div>
+<div class="med-prescricao-linha med-prescricao-duas"><label>Acolhido ativo <select id="medPessoa" required></select></label><label>Medicamento / embalagem <select id="medProdutoPresc" required></select></label></div>
+<div id="medResumoProduto" class="med-prescricao-resumo">Selecione o medicamento para visualizar embalagem, lote, validade e saldo.</div>
+<div class="med-prescricao-linha med-prescricao-tres"><label>Dose por administração (cápsulas/unidades ou mL) <input id="medConsumo" type="number" min="0.01" step="0.01" value="1" required></label><label>Descrição da dose prescrita <input id="medDose" placeholder="Ex.: 1 cápsula / 5 mL" maxlength="120" required></label><label>Via de administração <select id="medVia" required><option value="oral">Oral</option><option value="topica">Tópica</option><option value="inalatoria">Inalatória</option><option value="subcutanea">Subcutânea</option><option value="intramuscular">Intramuscular</option><option value="outra">Outra (detalhar)</option></select></label></div>
+<div class="med-prescricao-linha med-prescricao-check"><label class="med-check"><input id="medUsoLivre" type="checkbox"> Uso livre / conforme necessidade (somente segundo prescrição)</label></div>
+<div id="medCamposUsoLivre" class="med-prescricao-linha med-prescricao-livre" hidden><label>Vezes ao dia (se indicado) <input id="medVezes" type="number" min="1" max="24" step="1" value="1"></label><label>Período de preferência <select id="medPeriodo"><option value="">Não especificado</option><option>Manhã</option><option>Tarde</option><option>Noite</option></select></label><label>Relação com refeições <select id="medRefeicao"><option value="">Não especificado</option><option>Antes das refeições</option><option>Depois das refeições</option><option>Independente das refeições</option></select></label></div>
+<div id="medCamposData" class="med-prescricao-linha med-prescricao-duas"><label>Data de início <input id="medInicio" type="date" required></label><label>Horário de início <input id="medHoraInicio" type="time" value="08:00" required></label></div>
+<div class="med-prescricao-linha med-prescricao-auto"><div id="medCamposDuracao" class="med-prescricao-grupo"><label>Duração do tratamento (dias) <input id="medDias" type="number" min="1" max="3650" step="1" value="15" required></label></div><div id="medCamposProgramados" class="med-prescricao-grupo"><label>Intervalo entre doses (horas, apenas uso programado) <input id="medIntervalo" type="number" min="1" max="24" step="1" value="8" required></label></div></div>
+<div class="med-prescricao-linha med-prescricao-check"><label class="med-check"><input id="medFimManual" type="checkbox"> Fim do tratamento: definir data e horário manualmente</label></div>
+<div id="medFimManualCampos" class="med-prescricao-linha med-prescricao-duas" hidden><label>Data de término <input id="medFimData" type="date"></label><label>Horário de término <input id="medFimHora" type="time" value="06:00"></label></div>
+<div id="medFimAutoResumo" class="med-prescricao-resumo" aria-live="polite">Término automático: calculado a partir da duração e dos horários prescritos; o estoque disponível é verificado separadamente.</div>
+<div class="med-prescricao-linha med-prescricao-duas"><label>Prescritor / referência da prescrição <input id="medPrescritor" maxlength="160" required></label><label>Observações da prescrição <textarea id="medPrescObs" rows="2"></textarea></label></div>
+<div id="medProjecao" class="med-prescricao-estimativa">A serem consumidas: —. Estimativa conforme dados inseridos e prescrição.</div>
+<div class="med-prescricao-acoes"><button id="medSalvarPresc" type="submit">💾 Cadastrar prescrição</button><button id="medCancelarEdicao" type="button" hidden>Cancelar edição</button></div></form><h3>Prescrições registradas</h3><div class="med-tablewrap med-presc-tablewrap"><table class="med-presc-tabela"><colgroup><col style="width:22%"><col style="width:11%"><col style="width:38%"><col style="width:13%"><col style="width:8%"><col style="width:8%"></colgroup><thead><tr><th>Acolhido</th><th>Medicamento</th><th>Dose / via / horários</th><th>Sem estoque</th><th>Situação</th><th>Ação</th></tr></thead><tbody id="medListaPresc"></tbody></table></div></div>
+ <div id="medEstoque" class="med-view" hidden><h3>Cadastro de medicamento</h3><form id="medProdutoForm" class="med-form"><label>Nome comercial ou genérico <input id="medNome" required maxlength="120"></label><label>Tipo de embalagem <select id="medTipo"><option value="cartela">Cartela (comprimidos/cápsulas)</option><option value="frasco">Frasco líquido (mL)</option></select></label><label>Apresentação / concentração <input id="medApresentacao" required maxlength="120" placeholder="Ex.: cápsula de 500 mg / solução 20 mg/mL"></label><label id="medUnidadesWrap">Unidades por cartela <input id="medUnidadesCartela" type="number" min="1" step="1" value="10"></label><label id="medMlWrap" hidden>Volume por frasco (mL) <input id="medMlFrasco" type="number" min="0.01" step="0.01" value="100"></label><label>Local de armazenamento <input id="medLocal" maxlength="120" placeholder="Armário / prateleira"></label><button type="submit">+ Cadastrar medicamento</button></form><h3>Entrada de lote no estoque</h3><form id="medLoteForm" class="med-form"><label>Medicamento <select id="medProdutoLote" required></select></label><label>Número do lote <input id="medLoteNumero" required maxlength="80"></label><label>Validade <input id="medValidade" type="date" required></label><label id="medQtdLabel">Quantidade de cartelas recebidas <input id="medQuantidade" type="number" min="1" step="1" required></label><label id="medUnidadesLoteWrap">Unidades em cada cartela recebida <input id="medUnidadesLote" type="number" min="1" step="1" required></label><small id="medQtdHelp" class="med-nota">Informe a quantidade real por cartela, inclusive para cartelas incompletas.</small><div id="medLoteTotalPreview" class="med-lote-total-preview" aria-live="polite"></div><label class="med-destinacao">Destinação do lote <select id="medDestinacao"><option value="compartilhado">Estoque compartilhado</option><option value="reservado">Reservado para um acolhido</option></select></label><label id="medReservadoPessoaWrap" hidden>Acolhido responsável pelo estoque reservado <select id="medReservadoPessoa"></select></label><label>Origem / observação <input id="medOrigem" maxlength="160"></label><button type="submit">📦 Registrar entrada</button></form><h3>Inventário de medicamentos</h3><div class="med-tablewrap"><table><thead><tr><th>Medicamento / embalagem</th><th>Local</th><th>Lote</th><th>Destinação</th><th>Validade</th><th>Quantidade disponível</th><th>Alerta</th><th>Ações</th></tr></thead><tbody id="medListaEstoque"></tbody></table></div></div>
+ <div id="medAuditoria" class="med-view" hidden><h3>Histórico de movimentações e administrações</h3><div class="med-tablewrap"><table><thead><tr><th>Data / hora</th><th>Operador</th><th>Evento</th><th>Detalhes</th></tr></thead><tbody id="medListaEventos"></tbody></table></div><p class="med-nota">Os registros deste módulo também são enviados para a auditoria geral do sistema.</p></div>
+</section>
+<dialog id="medDialog" class="med-dialog"><form id="medConfirmForm" method="dialog"><h3 id="medDialogTitulo">Registrar administração</h3><p id="medDialogTexto"></p><label id="medStatusLabel">Situação <select id="medStatus"><option value="administrado">Administrado</option><option value="nao_administrado">Não administrado / recusado</option></select></label><label id="medHoraRealWrap" hidden>Horário efetivo da administração <input id="medHoraReal" type="time" step="60" autocomplete="off" inputmode="numeric"></label><div class="med-observacao-grupo"><label class="med-observacao-checkbox"><span>Observação / justificativa</span><input id="medObsLivreCheck" type="checkbox" aria-label="Escrever observação ou justificativa personalizada"> <span class="med-observacao-ajuda">Texto livre</span></label><label id="medMotivoWrap">Motivo / local do registro <select id="medMotivo" required><option value="">Selecione uma opção</option></select></label><label id="medObsLivreWrap" hidden>Observação / justificativa personalizada <textarea id="medObs" rows="4" placeholder="Descreva a administração ou o motivo da não administração"></textarea></label></div><p class="med-nota">Confira a prescrição, a pessoa, a dose e o horário. A confirmação gera registro de auditoria.</p><div class="med-actions"><button type="button" id="medCancelar">Cancelar</button><button type="submit" id="medConfirmar">Confirmar registro</button></div></form></dialog>
+
+
+
+
+
+<script id="med-script" src="../js/script-12.js"></script>
+
+<script id="abd-notificacoes-v24-js" src="../js/script-13.js"></script>
+<script id="v24-troca-incremental" src="../js/script-14.js"></script>
+
+</body></html>

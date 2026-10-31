@@ -1,0 +1,1 @@
+Imagens incorporadas ao codigo original como base64 ou dados de cadastro permanecem incorporadas ao JavaScript. Esta pasta e reservada para futuras imagens estaticas. Nao copie fotos pessoais para ca sem avaliar privacidade.
